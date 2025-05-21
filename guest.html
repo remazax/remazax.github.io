@@ -20,6 +20,14 @@
       margin-top: 20px;
       color: blue;
     }
+
+    #timer {
+      font-size: 20px;
+      color: darkred;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
     #quizSelector button {
       margin: 5px;
       padding: 10px;
@@ -34,6 +42,7 @@
   <div id="quizSelector"></div>
 
   <div id="quizContent" style="display: none;">
+    <div id="timer"></div>
     <div>
       <img id="img1">
       <img id="img2">
@@ -67,10 +76,14 @@
     const quizSelector = document.getElementById("quizSelector");
     const quizContent = document.getElementById("quizContent");
     const backBtn = document.getElementById("backBtn");
+    const timerEl = document.getElementById("timer");
 
     let currentQuestions = [];
     let index = 0;
     let score = 0;
+    let answers = [];
+    let timer = null;
+    let timeLeft = 5;
 
     async function loadQuizSets() {
       const snapshot = await getDocs(collection(db, "quiz_sets"));
@@ -87,35 +100,73 @@
       currentQuestions = questions;
       index = 0;
       score = 0;
+      answers = [];
       quizSelector.style.display = "none";
       quizContent.style.display = "block";
       showQuestion();
     }
 
     function showQuestion() {
+      if (index >= currentQuestions.length) {
+        return showFinalAnalytics();
+      }
+
       const q = currentQuestions[index];
       wordPrompt.textContent = `Choose: ${q.word}`;
       img1.src = q.img1;
       img2.src = q.img2;
+      img1.style.display = "inline";
+      img2.style.display = "inline";
+      scoreDiv.textContent = "";
+      timerEl.style.display = "block";
+
+      timeLeft = 5;
+      timerEl.textContent = `Time left: ${timeLeft}s`;
+
+      timer = setInterval(() => {
+        timeLeft--;
+        timerEl.textContent = `Time left: ${timeLeft}s`;
+        if (timeLeft === 0) {
+          clearInterval(timer);
+          handleAnswer(null); // no answer
+        }
+      }, 1000);
 
       img1.onclick = () => handleAnswer("1");
       img2.onclick = () => handleAnswer("2");
     }
 
     function handleAnswer(choice) {
+      clearInterval(timer);
       const q = currentQuestions[index];
-      if (choice === q.correct) score++;
+      const wasCorrect = choice === q.correct;
+      if (wasCorrect) score++;
+
+      answers.push({
+        word: q.word,
+        picked: choice,
+        correct: q.correct,
+        wasCorrect
+      });
 
       index++;
-      if (index < currentQuestions.length) {
-        showQuestion();
-      } else {
-        wordPrompt.textContent = "Quiz Complete!";
-        img1.style.display = "none";
-        img2.style.display = "none";
-        scoreDiv.textContent = `You scored ${score} out of ${currentQuestions.length}`;
-        backBtn.style.display = "inline-block";
-      }
+      showQuestion();
+    }
+
+    function showFinalAnalytics() {
+      wordPrompt.textContent = "Quiz Complete!";
+      img1.style.display = "none";
+      img2.style.display = "none";
+      timerEl.style.display = "none";
+
+      scoreDiv.innerHTML = "<h3>Your Answers:</h3><ul>" +
+        answers.map((a, i) => {
+          const label = a.picked ? `Image ${a.picked}` : "No answer";
+          const result = a.wasCorrect ? "✅" : "❌";
+          return `<li><strong>Q${i + 1}</strong> - ${a.word}: You chose <em>${label}</em> ${result}</li>`;
+        }).join("") + "</ul>";
+
+      backBtn.style.display = "inline-block";
     }
 
     backBtn.onclick = () => {
@@ -124,7 +175,7 @@
       img1.style.display = "inline";
       img2.style.display = "inline";
       backBtn.style.display = "none";
-      scoreDiv.textContent = "";
+      scoreDiv.innerHTML = "";
       wordPrompt.textContent = "Select a quiz to begin";
     };
 
