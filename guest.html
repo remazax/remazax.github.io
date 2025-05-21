@@ -80,7 +80,6 @@
 
     let currentQuestions = [];
     let index = 0;
-    let score = 0;
     let answers = [];
     let guestName = "";
     let timer = null;
@@ -106,7 +105,6 @@
 
       currentQuestions = questions;
       index = 0;
-      score = 0;
       answers = [];
       quizSelector.style.display = "none";
       quizContent.style.display = "block";
@@ -146,14 +144,11 @@
     function handleAnswer(choice) {
       clearInterval(timer);
       const q = currentQuestions[index];
-      const wasCorrect = choice === q.correct;
-      if (wasCorrect) score++;
 
       answers.push({
         word: q.word,
         picked: choice,
-        correct: q.correct,
-        wasCorrect
+        correct: q.correct // still stored in DB
       });
 
       index++;
@@ -169,8 +164,7 @@
       scoreDiv.innerHTML = "<h3>Your Answers:</h3><ul>" +
         answers.map((a, i) => {
           const label = a.picked ? `Image ${a.picked}` : "No answer";
-          const result = a.wasCorrect ? "✅" : "❌";
-          return `<li><strong>Q${i + 1}</strong> - ${a.word}: You chose <em>${label}</em> ${result}</li>`;
+          return `<li><strong>Q${i + 1}</strong> - ${a.word}: You chose <em>${label}</em></li>`;
         }).join("") + "</ul>";
 
       backBtn.style.display = "inline-block";
@@ -178,8 +172,6 @@
       try {
         await addDoc(collection(db, "quiz_results"), {
           name: guestName,
-          score,
-          total: currentQuestions.length,
           answers,
           timestamp: new Date()
         });
