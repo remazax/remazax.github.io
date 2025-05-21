@@ -1,0 +1,16 @@
+{
+  "name": "quiz-app",
+  "version": "1.0.0",
+  "description": "Image-based quiz app",
+  "main": "index.html",
+  "scripts": {
+    "start": "live-server --open=admin.html"
+  },
+  "devDependencies": {
+    "electron": "^28.1.0",
+    "electron-packager": "^17.1.2"
+  },
+  "dependencies": {
+    "firebase": "^11.8.0"
+  }
+}
