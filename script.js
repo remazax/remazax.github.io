@@ -31,12 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
         reader2.onload = () => {
           const img2Data = reader2.result;
 
-          questions.push({
-            word,
-            img1: img1Data,
-            img2: img2Data,
-            correct
-          });
+          questions.push({ word, img1: img1Data, img2: img2Data, correct });
 
           const li = document.createElement("li");
           li.textContent = `Q${questions.length}: ${word}`;
@@ -48,7 +43,6 @@ document.addEventListener("DOMContentLoaded", () => {
           document.getElementById("img2").value = "";
           document.querySelector('input[name="correct"][value="1"]').checked = true;
 
-          // Enable start
           startBtn.disabled = false;
         };
 
@@ -61,18 +55,18 @@ document.addEventListener("DOMContentLoaded", () => {
     startBtn.addEventListener("click", () => {
       const seconds = parseInt(document.getElementById("timePerQuestion").value) || 5;
 
-        const quizData = {
-        questions: questions,
+      const quizData = {
+        questions,
         currentIndex: 0,
         score: 0,
-        timePerQuestion: seconds
-        };
+        timePerQuestion: seconds,
+      };
 
       localStorage.setItem("quizData", JSON.stringify(quizData));
       window.location.href = "quiz.html";
     });
 
-    } else {
+  } else {
     // ===== QUIZ SCREEN =====
     const wordPrompt = document.getElementById("wordPrompt");
     const left = document.getElementById("leftImage");
@@ -90,42 +84,38 @@ document.addEventListener("DOMContentLoaded", () => {
     let timer;
     let timeLeft = quizData.timePerQuestion || 5;
 
-
+    // Create or show the timer element
     const createTimerDisplay = () => {
-        let t = document.getElementById("timerText");
-        if (!t) {
-            t = document.createElement("h3");
-            t.id = "timerText";
-            t.style.textAlign = "center";
-            t.style.fontSize = "24px";
-            t.style.color = "darkred";
-            t.style.marginBottom = "10px";
-
-            const container = document.getElementById("imageContainer");
-            container.parentNode.insertBefore(t, container);
-        } else {
-            t.style.display = "block"; // In case it was hidden before
-        }
-    return t;
+      let t = document.getElementById("timerText");
+      if (!t) {
+        t = document.createElement("h3");
+        t.id = "timerText";
+        t.style.textAlign = "center";
+        t.style.fontSize = "24px";
+        t.style.color = "darkred";
+        t.style.marginBottom = "10px";
+        const container = document.getElementById("imageContainer");
+        container.parentNode.insertBefore(t, container);
+      } else {
+        t.style.display = "block";
+      }
+      return t;
     };
 
-
     const startTimer = () => {
-        timeLeft = quizData.timePerQuestion || 5;
-        const timerText = createTimerDisplay();
+      timeLeft = quizData.timePerQuestion || 5;
+      const timerText = createTimerDisplay();
+      timerText.textContent = `Time left: ${timeLeft}s`;
+
+      timer = setInterval(() => {
+        timeLeft--;
         timerText.textContent = `Time left: ${timeLeft}s`;
-
-        timer = setInterval(() => {
-            timeLeft--;
-            timerText.textContent = `Time left: ${timeLeft}s`;
-
-            if (timeLeft === 0) {
-            clearInterval(timer);
-            recordAnswer(null);
-            }
-        }, 1000);
-        };
-
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          recordAnswer(null); // No answer selected
+        }
+      }, 1000);
+    };
 
     const showQuestion = () => {
       if (quizData.currentIndex >= quizData.questions.length) {
@@ -140,27 +130,24 @@ document.addEventListener("DOMContentLoaded", () => {
       resultText.textContent = "";
       left.style.display = "inline";
       right.style.display = "inline";
+
       startTimer();
     };
 
     const recordAnswer = (choice) => {
       clearInterval(timer);
-
       const q = quizData.questions[quizData.currentIndex];
       const wasCorrect = choice === q.correct;
-        if (wasCorrect) {
-        quizData.score++;
-        }
+      if (wasCorrect) quizData.score++;
 
-        if (!quizData.answers) quizData.answers = [];
+      if (!quizData.answers) quizData.answers = [];
 
-        quizData.answers.push({
+      quizData.answers.push({
         word: q.word,
         picked: choice,
         correct: q.correct,
-        wasCorrect
-        });
-
+        wasCorrect,
+      });
 
       quizData.currentIndex++;
       setTimeout(showQuestion, 500);
@@ -170,34 +157,30 @@ document.addEventListener("DOMContentLoaded", () => {
     right.addEventListener("click", () => recordAnswer("2"));
 
     const showFinalScore = () => {
-  wordPrompt.textContent = "Quiz Complete!";
-  left.style.display = "none";
-  right.style.display = "none";
+      wordPrompt.textContent = "Quiz Complete!";
+      left.style.display = "none";
+      right.style.display = "none";
 
-  const timerEl = document.getElementById("timerText");
-  if (timerEl) timerEl.style.display = "none";
+      const timerEl = document.getElementById("timerText");
+      if (timerEl) timerEl.style.display = "none";
 
-  resultText.textContent = `Your score: ${quizData.score}/${quizData.questions.length}`;
-  resultText.style.color = "blue";
+      resultText.textContent = `Your score: ${quizData.score}/${quizData.questions.length}`;
+      resultText.style.color = "blue";
 
-  // Show answer breakdown
-  const summary = document.createElement("div");
-    summary.style.textAlign = "left";
-    summary.style.marginTop = "20px";
-    summary.innerHTML = "<h3>Your Answers:</h3><ul>" +
+      const summary = document.createElement("div");
+      summary.style.textAlign = "left";
+      summary.style.marginTop = "20px";
+      summary.innerHTML = "<h3>Your Answers:</h3><ul>" +
         quizData.answers.map((a, i) => {
-        const choiceLabel = a.picked ? `Image ${a.picked}` : "No answer";
-        const result = a.wasCorrect ? "✅" : "❌";
-        return `<li><strong>Q${i + 1}</strong> - ${a.word}: You chose <em>${choiceLabel}</em> ${result}</li>`;
-        }).join("") +
-        "</ul>";
+          const choiceLabel = a.picked ? `Image ${a.picked}` : "No answer";
+          const result = a.wasCorrect ? "✅" : "❌";
+          return `<li><strong>Q${i + 1}</strong> - ${a.word}: You chose <em>${choiceLabel}</em> ${result}</li>`;
+        }).join("") + "</ul>";
 
-    document.body.appendChild(summary);
-
-    restartBtn.style.display = "inline-block";
-    localStorage.removeItem("quizData");
+      document.body.appendChild(summary);
+      restartBtn.style.display = "inline-block";
+      localStorage.removeItem("quizData");
     };
-
 
     restartBtn.addEventListener("click", () => {
       window.location.href = "index.html";
@@ -205,5 +188,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
     showQuestion();
   }
-
 });
