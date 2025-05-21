@@ -96,19 +96,28 @@
       });
     }
 
-    function startQuiz(questions) {
-      currentQuestions = questions;
-      index = 0;
-      score = 0;
-      answers = [];
-      quizSelector.style.display = "none";
-      quizContent.style.display = "block";
-      showQuestion();
-    }
+    let guestName = "";
 
-    function showQuestion() {
-      if (index >= currentQuestions.length) {
-        return showFinalAnalytics();
+    function startQuiz(questions) {
+        guestName = prompt("Enter your name:")?.trim();
+        if (!guestName) {
+          alert("A name is required to start.");
+          return;
+        }
+      
+        currentQuestions = questions;
+        index = 0;
+        score = 0;
+        answers = [];
+        quizSelector.style.display = "none";
+        quizContent.style.display = "block";
+        showQuestion();
+      }
+
+
+      function showQuestion() {
+        if (index >= currentQuestions.length) {
+          return showFinalAnalytics();
       }
 
       const q = currentQuestions[index];
@@ -153,21 +162,36 @@
       showQuestion();
     }
 
-    function showFinalAnalytics() {
+    import { addDoc, collection } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+    async function showFinalAnalytics() {
       wordPrompt.textContent = "Quiz Complete!";
       img1.style.display = "none";
       img2.style.display = "none";
       timerEl.style.display = "none";
-
+    
       scoreDiv.innerHTML = "<h3>Your Answers:</h3><ul>" +
         answers.map((a, i) => {
           const label = a.picked ? `Image ${a.picked}` : "No answer";
           const result = a.wasCorrect ? "✅" : "❌";
           return `<li><strong>Q${i + 1}</strong> - ${a.word}: You chose <em>${label}</em> ${result}</li>`;
         }).join("") + "</ul>";
-
+    
       backBtn.style.display = "inline-block";
-    }
+    
+      try {
+        await addDoc(collection(db, "quiz_results"), {
+          name: guestName,
+          score,
+          total: currentQuestions.length,
+          answers,
+          timestamp: new Date()
+        });
+      } catch (err) {
+        console.error("Failed to save results:", err);
+      }
+}
+
 
     backBtn.onclick = () => {
       quizSelector.style.display = "block";
