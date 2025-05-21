@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Quiz Builder</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <script>
+    const ADMIN_PASSWORD = "secret123";
+    const userPassword = prompt("Enter admin password:");
+    if (userPassword !== ADMIN_PASSWORD) {
+      alert("Access denied.");
+      window.location.href = "index.html";
+    }
+  </script>
+
+  <h1>Create a Quiz Set</h1>
+
+  <label>Quiz Title:</label><br>
+  <input type="text" id="quizTitle"><br><br>
+
+  <label>Word:</label><br>
+  <input type="text" id="word"><br><br>
+
+  <label>Image 1:</label><br>
+  <input type="file" id="img1" accept="image/*"><br><br>
+
+  <label>Image 2:</label><br>
+  <input type="file" id="img2" accept="image/*"><br><br>
+
+  <label>Correct Image:</label><br>
+  <input type="radio" name="correct" value="1" checked> Image 1<br>
+  <input type="radio" name="correct" value="2"> Image 2<br><br>
+
+  <button id="addQuestionBtn">+ Add Question</button>
+
+  <h3>Questions in this Quiz:</h3>
+  <ul id="questionList"></ul>
+
+  <button id="saveQuizBtn">Save Full Quiz</button>
+  <p id="status"></p>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBDNLSNkjpkKqLxpxKKsolwPgjutcFNEpw",
+      authDomain: "kikibuba.firebaseapp.com",
+      projectId: "kikibuba",
+      storageBucket: "kikibuba.firebasestorage.app",
+      messagingSenderId: "750913904766",
+      appId: "1:750913904766:web:5b8a06b23cb7c190b1382f",
+      measurementId: "G-XEFLXZ1EKL"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const questions = [];
+    const addBtn = document.getElementById("addQuestionBtn");
+    const saveBtn = document.getElementById("saveQuizBtn");
+    const list = document.getElementById("questionList");
+    const status = document.getElementById("status");
+
+    addBtn.addEventListener("click", async () => {
+      const word = document.getElementById("word").value.trim();
+      const img1 = document.getElementById("img1").files[0];
+      const img2 = document.getElementById("img2").files[0];
+      const correct = document.querySelector('input[name="correct"]:checked').value;
+
+      if (!word || !img1 || !img2) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      const readFile = (file) => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      };
+
+      const img1Data = await readFile(img1);
+      const img2Data = await readFile(img2);
+
+      questions.push({ word, img1: img1Data, img2: img2Data, correct });
+
+      const li = document.createElement("li");
+      li.textContent = `Q${questions.length}: ${word}`;
+      list.appendChild(li);
+
+      document.getElementById("word").value = "";
+      document.getElementById("img1").value = "";
+      document.getElementById("img2").value = "";
+      document.querySelector('input[name="correct"][value="1"]').checked = true;
+    });
+
+    saveBtn.addEventListener("click", async () => {
+      const title = document.getElementById("quizTitle").value.trim();
+      if (!title || questions.length === 0) {
+        alert("Please enter a quiz title and add at least one question.");
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "quiz_sets"), {
+          title,
+          questions
+        });
+
+        status.textContent = "✅ Full quiz saved!";
+        status.style.color = "green";
+        document.getElementById("quizTitle").value = "";
+        list.innerHTML = "";
+        questions.length = 0;
+      } catch (err) {
+        console.error(err);
+        status.textContent = "❌ Failed to save quiz.";
+        status.style.color = "red";
+      }
+    });
+  </script>
+</body>
+</html>
