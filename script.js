@@ -82,7 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const quizData = JSON.parse(stored);
     let timer;
-    let timeLeft = quizData.timePerQuestion || 5;
+    let timeLeft = quizData.timePerQuestion || 8;
 
     // Create or show the timer element
     const createTimerDisplay = () => {
@@ -103,7 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const startTimer = () => {
-      timeLeft = quizData.timePerQuestion || 5;
+      timeLeft = quizData.timePerQuestion || 8;
       const timerText = createTimerDisplay();
       timerText.textContent = `Time left: ${timeLeft}s`;
 
