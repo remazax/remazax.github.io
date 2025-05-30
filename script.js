@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     startBtn.addEventListener("click", () => {
-      const seconds = parseInt(document.getElementById("timePerQuestion").value) || 5;
+      const seconds = 8;
 
       const quizData = {
         questions,
