@@ -83,7 +83,7 @@
     let answers = [];
     let guestName = "";
     let timer = null;
-    let timeLeft = 3;
+    let timeLeft = 8;
 
     async function loadQuizSets() {
       const snapshot = await getDocs(collection(db, "quiz_sets"));
@@ -125,7 +125,7 @@
       scoreDiv.textContent = "";
       timerEl.style.display = "block";
 
-      timeLeft = 3;
+      timeLeft = 8;
       timerEl.textContent = `Time left: ${timeLeft}s`;
 
       timer = setInterval(() => {
